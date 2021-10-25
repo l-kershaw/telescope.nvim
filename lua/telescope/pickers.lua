@@ -837,16 +837,20 @@ function Picker:set_selection(row)
     if self._selection_entry and self.manager:find_entry(self._selection_entry) then
       -- Find the (possibly new) row of the old selection
       local row_old_selection = self:get_row(self.manager:find_entry(self._selection_entry))
-      -- Only change the first couple characters, nvim_buf_set_text leaves the existing highlights
-      a.nvim_buf_set_text(
-        results_bufnr,
-        row_old_selection,
-        0,
-        row_old_selection,
-        #self.selection_caret,
-        { self.entry_prefix }
-      )
-      self.highlighter:hi_multiselect(row_old_selection, self:is_multi_selected(self._selection_entry))
+      local old_line = a.nvim_buf_get_lines(results_bufnr, row_old_selection, row_old_selection, false)
+      -- Check if caret still present
+      if string.sub(old_line[1], 1, string.len(self.selection_caret)) == self.selection_caret then
+        -- Only change the first couple characters, nvim_buf_set_text leaves the existing highlights
+        a.nvim_buf_set_text(
+          results_bufnr,
+          row_old_selection,
+          0,
+          row_old_selection,
+          #self.selection_caret,
+          { self.entry_prefix }
+        )
+        self.highlighter:hi_multiselect(row_old_selection, self:is_multi_selected(self._selection_entry))
+      end
     end
 
     local caret = self.selection_caret
